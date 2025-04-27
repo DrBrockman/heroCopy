@@ -1,5 +1,5 @@
 {
-  "name": "vite-template",
+  "name": "redoc-helper",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -26,6 +26,7 @@
     "@heroui/system": "2.4.13",
     "@heroui/theme": "2.4.13",
     "@heroui/use-theme": "2.1.6",
+    "@iconify/react": "^5.2.1",
     "@react-aria/visually-hidden": "3.8.21",
     "@react-types/shared": "3.28.0",
     "clsx": "2.1.1",
