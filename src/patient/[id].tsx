@@ -119,8 +119,8 @@ const PatientDetailPage = () => {
   const sendPatientDataToGoogle = async (patientData: Patient) => {
     const url = "https://script.google.com/macros/s/AKfycbw7fO3QrGqPd3DM1dp6_FRDI8DYDSwPESHC0A83mjed1sTmFQeVowVUPpXv7o89tyADbg/exec";
     const payload = {
-      action: "addFromHero",
-      heroData: JSON.stringify([patientData])
+      action: "addVisitToQue",
+      info: JSON.stringify([patientData])
     };
     try {
       const response = await fetch(url, {
