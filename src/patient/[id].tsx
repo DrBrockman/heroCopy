@@ -120,12 +120,12 @@ const PatientDetailPage = () => {
     const url = "https://script.google.com/macros/s/AKfycbw7fO3QrGqPd3DM1dp6_FRDI8DYDSwPESHC0A83mjed1sTmFQeVowVUPpXv7o89tyADbg/exec";
     const payload = {
       action: "addFromHero",
-      heroData: [patientData]
+      heroData: JSON.stringify([patientData])
     };
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: { 'Content-Type': 'application/json' },
+        
         body: JSON.stringify(payload),
       });
       const text = await response.text();
