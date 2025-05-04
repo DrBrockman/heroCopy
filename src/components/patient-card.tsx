@@ -6,21 +6,21 @@ import { useNavigate } from 'react-router-dom';
 
 interface Person {
   id: number;
+  visitId: string;
   first: string;
   last: string;
-  date: string;
+  visitDateTime: string;
 }
 
 const PersonCard: React.FC<{ person: Person }> = ({ person }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    
     console.log("Person Data:", person);
+    // Navigate using the numeric ID instead of visitId
     navigate(`/patient/${person.id}`, { state: { person } });
   };
   
-
   return (
     <Card isPressable={true}
       className="w-full h-full cursor-pointer hover:shadow-md transition-shadow"
@@ -34,7 +34,7 @@ const PersonCard: React.FC<{ person: Person }> = ({ person }) => {
       </CardHeader>
       <CardBody>
         <div className="flex justify-between items-center">
-          <p className="text-default-500">{person.date}</p>
+          <p className="text-default-500">{person.visitDateTime}</p>
         </div>
       </CardBody>
     </Card>

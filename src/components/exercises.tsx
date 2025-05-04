@@ -1,4 +1,4 @@
-import React, {  } from "react";
+import React from "react";
 import {
   Card,
   Button,
@@ -11,8 +11,9 @@ import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
 } from "@heroui/react";
+// First install @iconify/react with: npm install @iconify/react
 import { Icon } from "@iconify/react";
 
 // Define Props interface
@@ -27,7 +28,7 @@ interface ExerciseProps {
 interface ExerciseData {
   id: string;
   name: string;
-  resistance: "TB" | "KB" | "DB";
+  resistance: "TB" | "KB" | "DB" | "";
   sets: number;
   reps: number;
 }
@@ -39,55 +40,18 @@ interface WarmupData {
   duration: string;
 }
 
-
 // Update component signature to accept props
-function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProps) {
-
-  // Remove local state for exercises and warmups
-  // const [exercises, setExercises] = React.useState<Exercise[]>([]);
-  // const [warmups, setWarmups] = React.useState<Warmup[]>([]);
-
-  // Remove patient context hooks if no longer needed directly
-  // const { id } = useParams<{ id: string }>();
-  // const { patients, updatePatient } = usePatient();
-  // const patientId = id ? parseInt(id) : 0;
+function Exercise({
+  exercises,
+  setExercises,
+  warmups,
+  setWarmups,
+}: ExerciseProps) {
+  
 
   const [newExerciseId, setNewExerciseId] = React.useState<string | null>(null);
 
-  // Remove useEffect that loads data from context
-  /*
-  useEffect(() => {
-    if (patientId && patients[patientId]) {
-      const currentPatient = patients[patientId];
-      // Load saved exercises if they exist and are different from current state
-      const savedExercises = currentPatient.exercisesData;
-      if (savedExercises && JSON.stringify(savedExercises) !== JSON.stringify(exercises)) {
-        setExercises(savedExercises as Exercise[]);
-      }
-
-      // Load saved warmups if they exist and are different from current state
-      const savedWarmups = currentPatient.warmupsData;
-      if (savedWarmups && JSON.stringify(savedWarmups) !== JSON.stringify(warmups)) {
-        setWarmups(savedWarmups as Warmup[]);
-      }
-    }
-  }, [patientId, patients]);
-  */
-
-  // Remove useEffect that saves data to context
-  /*
-  useEffect(() => {
-    if (patientId && (exercises.length > 0 || warmups.length > 0)) {
-      const timeoutId = setTimeout(() => {
-        updatePatient(patientId, {
-          exercisesData: exercises,
-          warmupsData: warmups
-        });
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [exercises, warmups, patientId, updatePatient]);
-  */
+  
 
   const addNewExercise = () => {
     const id = Math.random().toString(36).substring(7);
@@ -95,9 +59,9 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
     const newExercise: ExerciseData = {
       id,
       name: "",
-      resistance: "TB",
+      resistance: "",
       sets: 3,
-      reps: 10
+      reps: 10,
     };
     // Use the setExercises prop
     setExercises([...exercises, newExercise]);
@@ -110,23 +74,31 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
       id: Math.random().toString(36).substring(7),
       name: name,
       intensity: name === "Bike" ? "Time" : "",
-      duration: name === "Bike" ? "5" : ""
+      duration: name === "Bike" ? "5" : "",
     };
     // Use the setWarmups prop
     setWarmups([...warmups, newWarmup]);
   };
 
   // Update functions to use setExercises/setWarmups props
-  const updateExercise = (id: string, field: keyof ExerciseData, value: any) => {
-    setExercises(exercises.map(ex => (ex.id === id ? { ...ex, [field]: value } : ex)));
+  const updateExercise = (
+    id: string,
+    field: keyof ExerciseData,
+    value: any
+  ) => {
+    setExercises(
+      exercises.map((ex) => (ex.id === id ? { ...ex, [field]: value } : ex))
+    );
   };
 
   const updateWarmup = (id: string, field: keyof WarmupData, value: any) => {
-    setWarmups(warmups.map(wm => (wm.id === id ? { ...wm, [field]: value } : wm)));
+    setWarmups(
+      warmups.map((wm) => (wm.id === id ? { ...wm, [field]: value } : wm))
+    );
   };
 
   const deleteExercise = (id: string) => {
-    const newExercises = exercises.filter(ex => ex.id !== id);
+    const newExercises = exercises.filter((ex) => ex.id !== id);
     setExercises(newExercises);
     // Remove direct context update - parent will handle saving
     /*
@@ -139,15 +111,17 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
   };
 
   const deleteWarmup = (id: string) => {
-    const newWarmups = warmups.filter(wm => wm.id !== id);
+    const newWarmups = warmups.filter((wm) => wm.id !== id);
     setWarmups(newWarmups);
-     // Remove direct context update - parent will handle saving
+    // Remove direct context update - parent will handle saving
   };
 
-  // Remove the unused exerciseId parameter
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    
+  ) => {
     if (e.key === "Enter") {
-      // Pressing Enter adds a new exercise row
+      // Potentially find the next input or just add new exercise
       addNewExercise();
     }
   };
@@ -155,7 +129,9 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
   // Use effect to focus the new exercise input
   React.useEffect(() => {
     if (newExerciseId) {
-      const input = document.querySelector(`input[data-id="${newExerciseId}"]`) as HTMLInputElement;
+      const input = document.querySelector(
+        `input[data-id="${newExerciseId}"]`
+      ) as HTMLInputElement;
       if (input) {
         input.focus();
         setNewExerciseId(null); // Reset the ID after focusing
@@ -163,45 +139,50 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
     }
   }, [newExerciseId]); // Only depend on newExerciseId
 
-
   return (
     <div className="container mx-auto space-y-6">
-        <h2 className="text-xl font-semibold">Treatment</h2>
+      <h2 className="text-xl font-semibold">Treatment</h2>
       <div className="flex  justify-between ">
-
-          {/* Conditionally render the Add Warm Up dropdown */}
-          {warmups.length === 0 && (
-            <Dropdown>
-              <DropdownTrigger>
-                <Button color="primary" startContent={<Icon icon="lucide:plus" />}>
-                  Warm Up
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="Select Warmup Type"
-                onAction={(key) => addNewWarmup(key as "Bike" | "NuStep")} // Call addNewWarmup with selected key
+        {/* Conditionally render the Add Warm Up dropdown */}
+        {warmups.length === 0 && (
+          <Dropdown>
+            <DropdownTrigger>
+              <Button
+                color="primary"
+                startContent={<Icon icon="lucide:plus" />}
               >
-                <DropdownItem key="Bike" textValue="Bike">Bike</DropdownItem>
-                <DropdownItem key="NuStep" textValue="NuStep">NuStep</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          )}
-          <Button color="primary" onPress={addNewExercise} startContent={<Icon icon="lucide:plus" />}>
-            Exercise
-          </Button>
-        <Button color="primary" onPress={addNewExercise} startContent={<Icon icon="lucide:plus" />}>
-            Functional
-          </Button>
-          <Button color="primary" onPress={addNewExercise} startContent={<Icon icon="lucide:plus" />}>
-            Stretches
-          </Button>
-        <Button color="primary" onPress={addNewExercise} startContent={<Icon icon="lucide:plus" />}>
-            TDN
-          </Button>
-        <Button color="primary" onPress={addNewExercise} startContent={<Icon icon="lucide:plus" />}>
-            Soft Tissue
-          </Button>
-        
+                Warm Up
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="Select Warmup Type"
+              onAction={(key) => addNewWarmup(key as "Bike" | "NuStep")} // Call addNewWarmup with selected key
+            >
+              <DropdownItem key="Bike" textValue="Bike">
+                Bike
+              </DropdownItem>
+              <DropdownItem key="NuStep" textValue="NuStep">
+                NuStep
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        )}
+        <Button
+          color="primary"
+          onPress={addNewExercise}
+          startContent={<Icon icon="lucide:plus" />}
+        >
+          Exercise
+        </Button>
+       
+        <Button
+          color="primary"
+          onPress={addNewExercise}
+          startContent={<Icon icon="lucide:plus" />}
+        >
+          Stretches
+        </Button>
+       
       </div>
 
       {warmups.length > 0 && (
@@ -228,8 +209,12 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
                         aria-label="Warmup Name"
                         onAction={(key) => updateWarmup(wm.id, "name", key)}
                       >
-                        <DropdownItem key="Bike" textValue="Bike">Bike</DropdownItem>
-                        <DropdownItem key="NuStep" textValue="NuStep">NuStep</DropdownItem>
+                        <DropdownItem key="Bike" textValue="Bike">
+                          Bike
+                        </DropdownItem>
+                        <DropdownItem key="NuStep" textValue="NuStep">
+                          NuStep
+                        </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </TableCell>
@@ -242,10 +227,16 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
                       </DropdownTrigger>
                       <DropdownMenu
                         aria-label="Warmup Intensity"
-                        onAction={(key) => updateWarmup(wm.id, "intensity", key)}
+                        onAction={(key) =>
+                          updateWarmup(wm.id, "intensity", key)
+                        }
                       >
-                        <DropdownItem key="Time" textValue="Time">Time</DropdownItem>
-                        <DropdownItem key="Distance" textValue="Distance">Distance</DropdownItem>
+                        <DropdownItem key="Time" textValue="Time">
+                          Time
+                        </DropdownItem>
+                        <DropdownItem key="Distance" textValue="Distance">
+                          Distance
+                        </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </TableCell>
@@ -253,7 +244,9 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
                     <input
                       type="text"
                       value={wm.duration}
-                      onChange={(e) => updateWarmup(wm.id, "duration", e.target.value)}
+                      onChange={(e) =>
+                        updateWarmup(wm.id, "duration", e.target.value)
+                      }
                       className="w-32 p-2 rounded-lg border border-default-200 bg-transparent"
                       placeholder="Enter duration"
                     />
@@ -278,7 +271,11 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
       {exercises.length > 0 && (
         <Card className="w-full">
           <div className="pl-4 pt-2 font-semibold text-lg">Exercises</div>
-          <Table removeWrapper aria-label="Workout exercises table" className="w-full">
+          <Table
+            removeWrapper
+            aria-label="Workout exercises table"
+            className="w-full"
+          >
             <TableHeader>
               <TableColumn>Name</TableColumn>
               <TableColumn>Resistance</TableColumn>
@@ -293,9 +290,10 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
                     <input
                       type="text"
                       value={exercise.name}
-                      onChange={(e) => updateExercise(exercise.id, "name", e.target.value)}
-                      // Pass only the event 'e' to handleKeyPress
-                      onKeyPress={(e) => handleKeyPress(e)} 
+                      onChange={(e) =>
+                        updateExercise(exercise.id, "name", e.target.value)
+                      }
+                      onKeyPress={(e) => handleKeyPress(e)}
                       className="w-full p-2 rounded-lg border border-default-200 bg-transparent"
                       placeholder="Exercise name"
                       data-id={exercise.id}
@@ -309,12 +307,21 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
                         </Button>
                       </DropdownTrigger>
                       <DropdownMenu
+                      
                         aria-label="Resistance types"
-                        onAction={(key) => updateExercise(exercise.id, "resistance", key)}
+                        onAction={(key) =>
+                          updateExercise(exercise.id, "resistance", key)
+                        }
                       >
-                        <DropdownItem key="TB" textValue="TB">TB</DropdownItem>
-                        <DropdownItem key="KB" textValue="KB">KB</DropdownItem>
-                        <DropdownItem key="DB" textValue="DB">DB</DropdownItem>
+                        <DropdownItem key="TB" textValue="TB">
+                          TB
+                        </DropdownItem>
+                        <DropdownItem key="KB" textValue="KB">
+                          KB
+                        </DropdownItem>
+                        <DropdownItem key="DB" textValue="DB">
+                          DB
+                        </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </TableCell>
@@ -323,7 +330,11 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
                       type="number"
                       value={exercise.sets}
                       onChange={(e) =>
-                        updateExercise(exercise.id, "sets", parseInt(e.target.value) || 0)
+                        updateExercise(
+                          exercise.id,
+                          "sets",
+                          parseInt(e.target.value) || 0
+                        )
                       }
                       className="w-20 p-2 rounded-lg border border-default-200 bg-transparent"
                       min="0"
@@ -334,7 +345,11 @@ function Exercise({ exercises, setExercises, warmups, setWarmups }: ExerciseProp
                       type="number"
                       value={exercise.reps}
                       onChange={(e) =>
-                        updateExercise(exercise.id, "reps", parseInt(e.target.value) || 0)
+                        updateExercise(
+                          exercise.id,
+                          "reps",
+                          parseInt(e.target.value) || 0
+                        )
                       }
                       className="w-20 p-2 rounded-lg border border-default-200 bg-transparent"
                       min="0"

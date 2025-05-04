@@ -1,21 +1,21 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from "@/layouts/default";
-// Import TimeValue if needed for TimeInput state or parsing
-import { TimeInput, NumberInput,  } from "@heroui/react";
+import { Input, NumberInput } from "@heroui/react";
 import { Button, Textarea } from "@heroui/react";
 import { title } from "@/components/primitives";
-
 import ManFun from '@/components/ManFun';
 import ExerciseComponent from '@/components/exercises';
 import { usePatient, Patient } from "@/PatientContext";
+
+import { supabase } from "../supabaseClient";
 
 
 // Ensure these match the types expected by the child components and context
 interface ExerciseData {
   id: string;
   name: string;
-  resistance: "TB" | "KB" | "DB";
+  resistance: "TB" | "KB" | "DB" | "";
   sets: number;
   reps: number;
 }
@@ -29,17 +29,15 @@ interface WarmupData {
 
 const PatientDetailPage = () => {
   const { id } = useParams();
-  // location might not be needed if not using location.state.person
-  // const location = useLocation();
   const navigate = useNavigate();
-  const { patients, updatePatient } = usePatient();
+  const { patients, updatePatient, fetchPatients } = usePatient();
   const patientId = id ? parseInt(id) : 0;
 
-  // State declarations (ensure no duplicates)
+  // State declarations
   const [exercises, setExercises] = useState<ExerciseData[]>([]);
   const [warmups, setWarmups] = useState<WarmupData[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [functionalCategories, setFunctionalCategories] = useState<{ id: number; label: string }[]>([]);
+  // Removed functionalCategories state as it's not being used
   const [subjective, setSubjective] = useState("");
   const [assessment, setAssessment] = useState("");
   const [plan, setPlan] = useState("");
@@ -52,48 +50,63 @@ const PatientDetailPage = () => {
 
   
 
-  // Effect for loading data (remains the same)
+  // Effect for loading data from localStorage first, then from context
   useEffect(() => {
     let isMounted = true;
-    const patientData = patients[patientId];
+    
+    // Try to load from localStorage first
+   
 
-    if (patientId && patientData && isMounted) {
-      setSubjective(patientData.subjective || "");
-      setAssessment(patientData.assessment || "");
-      setPlan(patientData.plan || "");
-      setStartTime(patientData.startTime || ""); // Load string time
-      setEndTime(patientData.endTime || "");   // Load string time
-      setTe(patientData.te || "");
-      setTa(patientData.ta || "");
-      setMan(patientData.man || "");
-      setNmre(patientData.nmre || "");
-      setFunctionalCategories(patientData.functionalCategories || []);
-      setExercises(patientData.exercisesData || []);
-      setWarmups(patientData.warmupsData || []);
-      setSelectedCategories(patientData.selectedCategories || []);
-    }
+    // If not in localStorage or loading failed, try from context
+    const loadFromContext = () => {
+      const patientData = patients[patientId];
+      if (patientId && patientData && isMounted) {
+        setSubjective(patientData.subjective || "");
+        setAssessment(patientData.assessment || "");
+        setPlan(patientData.plan || "");
+        setStartTime(patientData.startTime || "");
+        setEndTime(patientData.endTime || "");
+        setTe(patientData.te || "");
+        setTa(patientData.ta || "");
+        setMan(patientData.man || "");
+        setNmre(patientData.nmre || "");
+        // Removed loading functionalCategories
+        setExercises(patientData.exercisesData || []);
+        setWarmups(patientData.warmupsData || []);
+        setSelectedCategories(patientData.selectedCategories || []);
+        console.log("Loaded patient data from context");
+      }
+    };
+
+    // Try localStorage first, then fall back to context
+    
+      loadFromContext();
+    
 
     return () => {
       isMounted = false;
     };
   }, [patientId, patients]);
 
-  // Effect for saving data (remains the same)
+ 
+  // Effect for saving data to context (remains similar)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (patientId && patients[patientId]) {
         const currentData = patients[patientId];
         const newData: Partial<Patient> = {
           subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
-          functionalCategories, exercisesData: exercises, warmupsData: warmups, selectedCategories
+          exercisesData: exercises, warmupsData: warmups, selectedCategories
+          
         };
 
-        // Simplified comparison check (adjust if deep comparison needed)
+        // Simplified comparison check
         const hasChanged = JSON.stringify(newData) !== JSON.stringify({
             subjective: currentData.subjective || "", assessment: currentData.assessment || "", plan: currentData.plan || "",
             startTime: currentData.startTime || "", endTime: currentData.endTime || "", te: currentData.te || "", ta: currentData.ta || "",
-            man: currentData.man || "", nmre: currentData.nmre || "", functionalCategories: currentData.functionalCategories || [],
+            man: currentData.man || "", nmre: currentData.nmre || "", 
             exercisesData: currentData.exercisesData || [], warmupsData: currentData.warmupsData || [], selectedCategories: currentData.selectedCategories || []
+            // Removed functionalCategories from comparison
         });
 
         if (hasChanged) {
@@ -102,11 +115,89 @@ const PatientDetailPage = () => {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, functionalCategories, exercises, warmups, selectedCategories, patientId, updatePatient, patients]);
+  }, [subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, 
+      exercises, warmups, selectedCategories, patientId, updatePatient, patients]);
+      // Removed functionalCategories from dependencies
 
-  
+  // Function to save data to Supabase
+  const saveToSupabase = async (patientData: Patient) => {
+    try {
+      // Prepare the data for Supabase
+      const { visitId, ...dataToSave } = patientData;
+      
+      // Update the record in the 'people' table using visitId as the key
+      const { data, error } = await supabase
+        .from('people')
+        .update({
+          subjective: dataToSave.subjective,
+          assessment: dataToSave.assessment,
+          plan: dataToSave.plan,
+          startTime: dataToSave.startTime,
+          endTime: dataToSave.endTime,
+          te: dataToSave.te,
+          ta: dataToSave.ta,
+          man: dataToSave.man,
+          nmre: dataToSave.nmre,
+          exercisesData: dataToSave.exercisesData,
+          warmupsData: dataToSave.warmupsData,
+          // Removed functionalCategories from Supabase update
+          selectedCategories: dataToSave.selectedCategories, // Add this line to save selectedCategories
+        })
+        .eq('visitId', visitId)
+        .select();
 
-  // Effect for redirecting if patient data is not found (Top Level)
+      if (error) {
+        throw error;
+      }
+
+      console.log("Successfully saved to Supabase:", data);
+      return data;
+    } catch (error) {
+      console.error("Error saving to Supabase:", error);
+      throw error;
+    }
+  };
+
+  // Handle Back button press with Supabase save
+  const handleBackPress = async () => {
+    if (patientId && patients[patientId]) {
+      try {
+        const currentPatientData = patients[patientId];
+        // Construct the most up-to-date data from component state
+        const dataToSend: Patient = {
+          ...currentPatientData, // Base data
+          // Overwrite with current state
+          subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
+          exercisesData: exercises, warmupsData: warmups, selectedCategories
+          // Removed functionalCategories
+        };
+        
+        // Save to Supabase
+        await saveToSupabase(dataToSend);
+        
+        // Also send to Google if needed
+        
+        
+        
+        
+        // Refresh patients data to ensure we have the latest
+        await fetchPatients();
+        
+        // Show success message
+        console.log("Patient data saved successfully");
+      } catch (error) {
+        console.error("Error saving patient data:", error);
+        // You could add a toast notification here for error feedback
+      }
+    } else {
+      console.warn("No patient data found for ID:", patientId, "Cannot save data.");
+    }
+    
+    // Navigate back regardless of save success/failure
+    navigate('/blog');
+  };
+
+ 
   useEffect(() => {
     // Check only after patients have potentially loaded
     if (patientId !== 0 && Object.keys(patients).length > 0 && !patients[patientId]) {
@@ -115,52 +206,7 @@ const PatientDetailPage = () => {
     }
   }, [patientId, patients, navigate]); // Depend on patients object
 
-  // Function to send data to Google Apps Script (remains the same)
-  const sendPatientDataToGoogle = async (patientData: Patient) => {
-    const url = "https://script.google.com/macros/s/AKfycbw7fO3QrGqPd3DM1dp6_FRDI8DYDSwPESHC0A83mjed1sTmFQeVowVUPpXv7o89tyADbg/exec";
-    const payload = {
-      action: "addVisitToQue",
-      info: JSON.stringify([patientData])
-    };
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        
-        body: JSON.stringify(payload),
-      });
-      const text = await response.text();
-      console.log("Google Script Response:", text);
-      try {
-        const data = JSON.parse(text);
-        console.log("Parsed Google Script Response:", data);
-      } catch (error) {
-        console.warn("Response from Google Script was not valid JSON:", text);
-      }
-    } catch (error) {
-      console.error("Error sending data to Google Script:", error);
-    }
-  };
-
-  // Handle Back button press (declared once)
-  const handleBackPress = async () => {
-    if (patientId && patients[patientId]) {
-       const currentPatientData = patients[patientId];
-       // Construct the most up-to-date data from component state
-       const dataToSend: Patient = {
-         ...currentPatientData, // Base data
-         // Overwrite with current state
-         subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
-         functionalCategories, exercisesData: exercises, warmupsData: warmups, selectedCategories
-       };
-      await sendPatientDataToGoogle(dataToSend);
-    } else {
-      console.warn("No patient data found for ID:", patientId, "Cannot send to Google.");
-    }
-    navigate('/blog');
-  };
-
-  
-
+ 
   // Loading state check
   if (patientId !== 0 && !patients[patientId]) {
      // Show loading only if ID is valid but data isn't loaded yet
@@ -168,18 +214,15 @@ const PatientDetailPage = () => {
      return <div>Loading patient data...</div>;
   }
 
-  
-
 
   return (
     <DefaultLayout>
-      <section className=" flex flex-col items-center  gap-4 py-6 md:py-10">
-      <div className="px-5 mx-auto  ">
+      <section className="flex flex-col items-center gap-4 py-6 md:py-10">
+        <div className="px-5 mx-auto">
           <div className="flex justify-between items-center mb-6">
             <div>
-              {/* Rely solely on patient data from context */}
               <h1 className={title({ size: 'sm' })}>{patients[patientId]?.first} {patients[patientId]?.last}</h1>
-              <p className="text-default-500">{patients[patientId]?.date}</p>
+              <p className="text-default-500">{patients[patientId]?.visitDateTime}</p>
             </div>
             <Button onPress={handleBackPress} variant="flat" size='md'>
               Back
@@ -261,20 +304,20 @@ const PatientDetailPage = () => {
               />
             </div>
 
-            {/* Time Inputs */}
-            <div className="flex items-center grid-cols-2  mt-4">
-              <TimeInput
+            {/* Time Inputs - Fix the missing onChange handlers */}
+            <div className="flex items-center grid-cols-2 mt-4 ">
+              <Input
+                className='pr-4'
+                type = "text"
                 label="Start Time"
-                labelPlacement='outside-left'
-                variant='underlined'
-                
-                // onChange provides TimeValue, format it back to string
+                value={startTime}
+                onValueChange={(time) => setStartTime(time)}
               />
-              <TimeInput
+              <Input
+                type="text"
                 label="End Time"
-                labelPlacement='outside-left'
-                variant='underlined'
-               
+                value={endTime}
+                onValueChange={(time) => setEndTime(time)}
               />
             </div>
           </div>
