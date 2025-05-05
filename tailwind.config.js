@@ -1,5 +1,5 @@
 import {heroui} from "@heroui/theme"
-
+import plugin from 'tailwindcss/plugin';
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
