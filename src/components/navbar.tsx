@@ -22,7 +22,7 @@ import { Logo } from "@/components/icons";
 export const Navbar = () => {
   
   return (
-    <HeroUINavbar maxWidth="xl" position="sticky">
+    <HeroUINavbar maxWidth="xl" position="sticky" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
       
         <NavbarMenuToggle

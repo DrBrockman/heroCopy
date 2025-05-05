@@ -13,5 +13,17 @@ export default {
     extend: {},
   },
   darkMode: "class",
-  plugins: [heroui()],
+  plugins: [heroui(),
+    plugin(function({ addBase }) {
+      addBase({
+        'body': {
+          'scrollbar-width': 'none', // For Firefox
+          '-ms-overflow-style': 'none', // For Internet Explorer and Edge
+        },
+        'body::-webkit-scrollbar': {
+          'display': 'none', // For Chrome, Safari, and Opera
+        }
+      })
+    })
+  ],
 }
