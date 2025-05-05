@@ -27,7 +27,7 @@ const PersonCard: React.FC<{ person: Person }> = ({ person }) => {
       onPress={handleCardClick}
     >
       <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
+      <div className="flex flex-col items-baseline">
           <span className="text-md font-semibold ">{person.first}</span>
           <span className="text-small text-default-500">{person.last}</span>
         </div>

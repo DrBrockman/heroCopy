@@ -26,7 +26,7 @@ export const Navbar = () => {
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
       
         <NavbarMenuToggle
-          className="sm:hidden mr-2"
+          className="lg:hidden mr-2"
           
         />
         
