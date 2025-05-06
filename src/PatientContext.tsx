@@ -112,7 +112,23 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
     loadPatients();
   
   }, [location.pathname]); // Keep dependency on location.pathname
+  useEffect(() => {
+    // Function to handle visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Page is now visible, refreshing patient data...");
+        fetchPatients();
+      }
+    };
 
+    // Add event listener for visibility change
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Clean up the event listener when component unmounts
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
   // Update a patient's details in state only
   const updatePatient = (id: number, data: Partial<Patient>) => {
     setPatients((prev) => {
