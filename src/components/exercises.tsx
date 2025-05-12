@@ -140,9 +140,9 @@ function Exercise({
   }, [newExerciseId]); // Only depend on newExerciseId
 
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="w-full space-y-6">
       <h2 className="text-xl font-semibold">Treatment</h2>
-      <div className="flex  justify-between ">
+      <div className="flex flex-nowrap gap-2 justify-between ">
         {/* Conditionally render the Add Warm Up dropdown */}
         {warmups.length === 0 && (
           <Dropdown>
@@ -188,6 +188,7 @@ function Exercise({
       {warmups.length > 0 && (
         <Card className="w-full">
           <div className="pl-4 pt-2 font-semibold text-lg">Warm Up</div>
+          <div className="overflow-x-auto"> 
           <Table removeWrapper aria-label="Warm up table" hideHeader>
             <TableHeader>
               <TableColumn>Name</TableColumn>
@@ -265,16 +266,18 @@ function Exercise({
               ))}
             </TableBody>
           </Table>
+          </div>
         </Card>
       )}
 
       {exercises.length > 0 && (
         <Card className="w-full">
-          <div className="pl-4 pt-2 font-semibold text-lg">Exercises</div>
+          <div className="pl-2 pt-2 font-semibold text-lg">Exercises</div>
+          <div className="overflow-x-auto">
           <Table
             removeWrapper
             aria-label="Workout exercises table"
-            className="w-full"
+            
           >
             <TableHeader>
               <TableColumn>Name</TableColumn>
@@ -286,89 +289,84 @@ function Exercise({
             <TableBody>
               {exercises.map((exercise) => (
                 <TableRow key={exercise.id}>
-                  <TableCell>
-                    <input
-                      type="text"
-                      value={exercise.name}
-                      onChange={(e) =>
-                        updateExercise(exercise.id, "name", e.target.value)
-                      }
-                      onKeyPress={(e) => handleKeyPress(e)}
-                      className="w-full p-2 rounded-lg border border-default-200 bg-transparent"
-                      placeholder="Exercise name"
-                      data-id={exercise.id}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button variant="bordered" className="w-24">
-                          {exercise.resistance}
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu
-                      
-                        aria-label="Resistance types"
-                        onAction={(key) =>
-                          updateExercise(exercise.id, "resistance", key)
+                  <TableCell className="whitespace-nowrap">
+                      <input 
+                        type="text"
+                        value={exercise.name}
+                        onChange={(e) =>
+                          updateExercise(exercise.id, "name", e.target.value)
                         }
+                        onKeyPress={(e) => handleKeyPress(e)}
+                        className=" p-2 rounded-lg border border-default-200 bg-transparent"
+                        placeholder="Exercise name"
+                        data-id={exercise.id}
+                      />
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <input
+                        type="number"
+                        value={exercise.sets}
+                        onChange={(e) =>
+                          updateExercise(
+                            exercise.id,
+                            "sets",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-10 p-2 rounded-lg border border-default-200 bg-transparent"
+                        min="0"
+                      />
+                    </TableCell>
+                    
+                    <TableCell className="whitespace-nowrap">
+                      <input
+                        type="number"
+                        value={exercise.reps}
+                        onChange={(e) =>
+                          updateExercise(
+                            exercise.id,
+                            "reps",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-10 p-2 rounded-lg border border-default-200 bg-transparent"
+                        min="0"
+                      />
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <Button variant="bordered" className="w-10">
+                            {exercise.resistance}
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu
+                          aria-label="Resistance types"
+                          onAction={(key) =>
+                            updateExercise(exercise.id, "resistance", key)
+                          }
+                        >
+                          <DropdownItem key="TB">TB</DropdownItem>
+                          <DropdownItem key="KB">KB</DropdownItem>
+                          <DropdownItem key="DB">DB</DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Button
+                        isIconOnly
+                        color="danger"
+                        variant="light"
+                        onPress={() => deleteExercise(exercise.id)}
                       >
-                        <DropdownItem key="TB" textValue="TB">
-                          TB
-                        </DropdownItem>
-                        <DropdownItem key="KB" textValue="KB">
-                          KB
-                        </DropdownItem>
-                        <DropdownItem key="DB" textValue="DB">
-                          DB
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      type="number"
-                      value={exercise.sets}
-                      onChange={(e) =>
-                        updateExercise(
-                          exercise.id,
-                          "sets",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-20 p-2 rounded-lg border border-default-200 bg-transparent"
-                      min="0"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      type="number"
-                      value={exercise.reps}
-                      onChange={(e) =>
-                        updateExercise(
-                          exercise.id,
-                          "reps",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-20 p-2 rounded-lg border border-default-200 bg-transparent"
-                      min="0"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      isIconOnly
-                      color="danger"
-                      variant="light"
-                      onPress={() => deleteExercise(exercise.id)}
-                    >
-                      <Icon icon="lucide:trash-2" />
-                    </Button>
-                  </TableCell>
+                        <Icon icon="lucide:trash-2" />
+                      </Button>
+                    </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+      </div>
         </Card>
       )}
     </div>

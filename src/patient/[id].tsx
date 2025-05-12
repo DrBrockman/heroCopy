@@ -7,7 +7,7 @@ import { title } from "@/components/primitives";
 import ManFun from '@/components/ManFun';
 import ExerciseComponent from '@/components/exercises';
 import { usePatient, Patient } from "@/PatientContext";
-
+import {addToast} from "@heroui/react"
 import { supabase } from "../supabaseClient";
 
 
@@ -149,7 +149,7 @@ const PatientDetailPage = () => {
       if (error) {
         throw error;
       }
-
+      addToast({ title: "Patient data saved successfully.", variant: "flat", timeout: 3000, severity: "success", color: "primary" });
       console.log("Successfully saved to Supabase:", data);
       return data;
     } catch (error) {
@@ -185,6 +185,7 @@ const PatientDetailPage = () => {
         
         // Show success message
         console.log("Patient data saved successfully");
+       
       } catch (error) {
         console.error("Error saving patient data:", error);
         // You could add a toast notification here for error feedback
@@ -218,7 +219,7 @@ const PatientDetailPage = () => {
   return (
     <DefaultLayout>
       <section className="flex flex-col items-center gap-4 py-6 md:py-10">
-        <div className="px-5 mx-auto">
+        <div className="px-5 w-full">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className={title({ size: 'sm' })}>{patients[patientId]?.first} {patients[patientId]?.last}</h1>
