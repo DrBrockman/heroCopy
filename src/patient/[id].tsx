@@ -198,6 +198,39 @@ const PatientDetailPage = () => {
     navigate('/blog');
   };
 
+  // New useEffect to save data when the tab becomes hidden
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'hidden') {
+        console.log("Tab is hidden, attempting to save patient data...");
+        if (patientId && patients[patientId]) {
+          try {
+            const currentPatientData = patients[patientId];
+            // Construct the most up-to-date data from component state
+            const dataToSend: Patient = {
+              ...currentPatientData, // Base data
+              // Overwrite with current state
+              subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
+              exercisesData: exercises, warmupsData: warmups, selectedCategories
+            };
+            await saveToSupabase(dataToSend);
+            console.log("Patient data saved successfully on tab hidden.");
+          } catch (error) {
+            console.error("Error saving patient data on tab hidden:", error);
+          }
+        } else {
+          console.warn("No patient data found for ID:", patientId, "Cannot save data on tab hidden.");
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [patientId, patients, subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, exercises, warmups, selectedCategories, saveToSupabase]); // Add all relevant state variables and functions as dependencies
+
  
   useEffect(() => {
     // Check only after patients have potentially loaded
@@ -306,9 +339,9 @@ const PatientDetailPage = () => {
             </div>
 
             {/* Time Inputs - Fix the missing onChange handlers */}
-            <div className="flex items-center grid-cols-2 mt-4 ">
+            <div className="flex gap-4">
               <Input
-                className='pr-4'
+                
                 type = "text"
                 label="Start Time"
                 value={startTime}

@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Card,
+  Input,
   Button,
   Table,
   TableHeader,
@@ -270,105 +271,82 @@ function Exercise({
         </Card>
       )}
 
-      {exercises.length > 0 && (
-        <Card className="w-full">
-          <div className="pl-2 pt-2 font-semibold text-lg">Exercises</div>
-          <div className="overflow-x-auto">
-          <Table
-            removeWrapper
-            aria-label="Workout exercises table"
-            
+{exercises.map((exercise) => (
+  <Card key={exercise.id} className="p-4 space-y-4">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <Input
+        type="text"
+        size="sm"
+        variant="flat"
+        value={exercise.name}
+        onChange={(e) =>
+          updateExercise(exercise.id, "name", e.target.value)
+        }
+        onKeyPress={handleKeyPress}
+        className="w-full sm:w-1/3"
+        placeholder="Exercise name"
+        data-id={exercise.id}
+      />
+
+      <div className="flex gap-2 w-full sm:w-2/3">
+        {/* Sets */}
+        <Dropdown>
+          <DropdownTrigger>
+            <Button variant="flat" className="w-full" color="primary">
+              Sets: {exercise.sets}
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label="Set Options"
+            onAction={(key) =>
+              updateExercise(exercise.id, "sets", key.toString())
+            }
           >
-            <TableHeader>
-              <TableColumn>Name</TableColumn>
-              <TableColumn>Resistance</TableColumn>
-              <TableColumn>Sets</TableColumn>
-              <TableColumn>Reps</TableColumn>
-              <TableColumn>Actions</TableColumn>
-            </TableHeader>
-            <TableBody>
-              {exercises.map((exercise) => (
-                <TableRow key={exercise.id}>
-                  <TableCell className="whitespace-nowrap">
-                      <input 
-                        type="text"
-                        value={exercise.name}
-                        onChange={(e) =>
-                          updateExercise(exercise.id, "name", e.target.value)
-                        }
-                        onKeyPress={(e) => handleKeyPress(e)}
-                        className=" p-2 rounded-lg border border-default-200 bg-transparent"
-                        placeholder="Exercise name"
-                        data-id={exercise.id}
-                      />
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <input
-                        type="number"
-                        value={exercise.sets}
-                        onChange={(e) =>
-                          updateExercise(
-                            exercise.id,
-                            "sets",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-10 p-2 rounded-lg border border-default-200 bg-transparent"
-                        min="0"
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="whitespace-nowrap">
-                      <input
-                        type="number"
-                        value={exercise.reps}
-                        onChange={(e) =>
-                          updateExercise(
-                            exercise.id,
-                            "reps",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-10 p-2 rounded-lg border border-default-200 bg-transparent"
-                        min="0"
-                      />
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Dropdown>
-                        <DropdownTrigger>
-                          <Button variant="bordered" className="w-10">
-                            {exercise.resistance}
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu
-                          aria-label="Resistance types"
-                          onAction={(key) =>
-                            updateExercise(exercise.id, "resistance", key)
-                          }
-                        >
-                          <DropdownItem key="TB">TB</DropdownItem>
-                          <DropdownItem key="KB">KB</DropdownItem>
-                          <DropdownItem key="DB">DB</DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Button
-                        isIconOnly
-                        color="danger"
-                        variant="light"
-                        onPress={() => deleteExercise(exercise.id)}
-                      >
-                        <Icon icon="lucide:trash-2" />
-                      </Button>
-                    </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            {[1, 2, 3, 4, 5].map((option) => (
+              <DropdownItem key={option.toString()}>
+                {option}
+              </DropdownItem>
+            ))}
+          </DropdownMenu>
+        </Dropdown>
+
+        {/* Reps */}
+        <Dropdown>
+          <DropdownTrigger>
+            <Button variant="flat" className="w-full" color="primary">
+              Reps: {exercise.reps}
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label="Rep Options"
+            onAction={(key) =>
+              updateExercise(exercise.id, "reps", key.toString())
+            }
+          >
+            {[1, 3, 5, 6, 8, 10, 12, 15, 20].map((option) => (
+              <DropdownItem key={option.toString()}>
+                {option}
+              </DropdownItem>
+            ))}
+          </DropdownMenu>
+        </Dropdown>
+
+        
+
+        {/* Delete Button */}
+        <Button
+          isIconOnly
+          color="danger"
+          variant="light"
+          onPress={() => deleteExercise(exercise.id)}
+          className="shrink-0"
+        >
+          <Icon icon="lucide:trash-2" />
+        </Button>
       </div>
-        </Card>
-      )}
+    </div>
+  </Card>
+))}
     </div>
   );
 }
