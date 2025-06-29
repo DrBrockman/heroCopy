@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from "@/layouts/default";
-import { Input, NumberInput } from "@heroui/react";
+import { Input } from "@heroui/react";
 import { Button, Textarea } from "@heroui/react";
 import { title } from "@/components/primitives";
 import ManFun from '@/components/ManFun';
@@ -9,7 +9,7 @@ import ExerciseComponent from '@/components/exercises';
 import { usePatient, Patient } from "@/PatientContext";
 import {addToast} from "@heroui/react"
 import { supabase } from "../supabaseClient";
-
+import { NumberPadModal } from '@/components/NumberpadModal';
 
 // Ensure these match the types expected by the child components and context
 interface ExerciseData {
@@ -27,6 +27,9 @@ interface WarmupData {
   duration: string;
 }
 
+// Define the type for the fields that will use the number pad
+type CptField = "TE" | "TA" | "MAN" | "NMRE";
+
 const PatientDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,26 +40,24 @@ const PatientDetailPage = () => {
   const [exercises, setExercises] = useState<ExerciseData[]>([]);
   const [warmups, setWarmups] = useState<WarmupData[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  // Removed functionalCategories state as it's not being used
   const [subjective, setSubjective] = useState("");
   const [assessment, setAssessment] = useState("");
   const [plan, setPlan] = useState("");
-  const [startTime, setStartTime] = useState<string>(""); // Store as string HH:mm
-  const [endTime, setEndTime] = useState<string>("");   // Store as string HH:mm
+  const [startTime, setStartTime] = useState<string>(""); 
+  const [endTime, setEndTime] = useState<string>("");   
   const [te, setTe] = useState("");
   const [ta, setTa] = useState("");
   const [man, setMan] = useState("");
   const [nmre, setNmre] = useState("");
 
-  
+  // State for managing the number pad modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentEditingField, setCurrentEditingField] = useState<CptField | null>(null);
 
   // Effect for loading data from localStorage first, then from context
   useEffect(() => {
     let isMounted = true;
     
-    // Try to load from localStorage first
-   
-
     // If not in localStorage or loading failed, try from context
     const loadFromContext = () => {
       const patientData = patients[patientId];
@@ -70,7 +71,6 @@ const PatientDetailPage = () => {
         setTa(patientData.ta || "");
         setMan(patientData.man || "");
         setNmre(patientData.nmre || "");
-        // Removed loading functionalCategories
         setExercises(patientData.exercisesData || []);
         setWarmups(patientData.warmupsData || []);
         setSelectedCategories(patientData.selectedCategories || []);
@@ -78,10 +78,7 @@ const PatientDetailPage = () => {
       }
     };
 
-    // Try localStorage first, then fall back to context
-    
-      loadFromContext();
-    
+    loadFromContext();
 
     return () => {
       isMounted = false;
@@ -100,13 +97,11 @@ const PatientDetailPage = () => {
           
         };
 
-        // Simplified comparison check
         const hasChanged = JSON.stringify(newData) !== JSON.stringify({
             subjective: currentData.subjective || "", assessment: currentData.assessment || "", plan: currentData.plan || "",
             startTime: currentData.startTime || "", endTime: currentData.endTime || "", te: currentData.te || "", ta: currentData.ta || "",
             man: currentData.man || "", nmre: currentData.nmre || "", 
             exercisesData: currentData.exercisesData || [], warmupsData: currentData.warmupsData || [], selectedCategories: currentData.selectedCategories || []
-            // Removed functionalCategories from comparison
         });
 
         if (hasChanged) {
@@ -117,15 +112,12 @@ const PatientDetailPage = () => {
     return () => clearTimeout(timer);
   }, [subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, 
       exercises, warmups, selectedCategories, patientId, updatePatient, patients]);
-      // Removed functionalCategories from dependencies
-
+      
   // Function to save data to Supabase
   const saveToSupabase = async (patientData: Patient) => {
     try {
-      // Prepare the data for Supabase
       const { visitId, ...dataToSave } = patientData;
       
-      // Update the record in the 'people' table using visitId as the key
       const { data, error } = await supabase
         .from('people')
         .update({
@@ -140,15 +132,13 @@ const PatientDetailPage = () => {
           nmre: dataToSave.nmre,
           exercisesData: dataToSave.exercisesData,
           warmupsData: dataToSave.warmupsData,
-          // Removed functionalCategories from Supabase update
-          selectedCategories: dataToSave.selectedCategories, // Add this line to save selectedCategories
+          selectedCategories: dataToSave.selectedCategories,
         })
         .eq('visitId', visitId)
         .select();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+
       addToast({ title: "Patient data saved successfully.", variant: "flat", timeout: 3000, severity: "success", color: "primary" });
       console.log("Successfully saved to Supabase:", data);
       return data;
@@ -163,38 +153,20 @@ const PatientDetailPage = () => {
     if (patientId && patients[patientId]) {
       try {
         const currentPatientData = patients[patientId];
-        // Construct the most up-to-date data from component state
         const dataToSend: Patient = {
-          ...currentPatientData, // Base data
-          // Overwrite with current state
+          ...currentPatientData,
           subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
           exercisesData: exercises, warmupsData: warmups, selectedCategories
-          // Removed functionalCategories
         };
-        
-        // Save to Supabase
         await saveToSupabase(dataToSend);
-        
-        // Also send to Google if needed
-        
-        
-        
-        
-        // Refresh patients data to ensure we have the latest
         await fetchPatients();
-        
-        // Show success message
         console.log("Patient data saved successfully");
-       
       } catch (error) {
         console.error("Error saving patient data:", error);
-        // You could add a toast notification here for error feedback
       }
     } else {
       console.warn("No patient data found for ID:", patientId, "Cannot save data.");
     }
-    
-    // Navigate back regardless of save success/failure
     navigate('/blog');
   };
 
@@ -206,10 +178,8 @@ const PatientDetailPage = () => {
         if (patientId && patients[patientId]) {
           try {
             const currentPatientData = patients[patientId];
-            // Construct the most up-to-date data from component state
             const dataToSend: Patient = {
-              ...currentPatientData, // Base data
-              // Overwrite with current state
+              ...currentPatientData, 
               subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
               exercisesData: exercises, warmupsData: warmups, selectedCategories
             };
@@ -229,24 +199,77 @@ const PatientDetailPage = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [patientId, patients, subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, exercises, warmups, selectedCategories, saveToSupabase]); // Add all relevant state variables and functions as dependencies
-
+  }, [patientId, patients, subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, exercises, warmups, selectedCategories, saveToSupabase]);
  
   useEffect(() => {
-    // Check only after patients have potentially loaded
     if (patientId !== 0 && Object.keys(patients).length > 0 && !patients[patientId]) {
        console.warn(`Patient data not found for ID: ${patientId}. Redirecting.`);
        navigate('/blog');
     }
-  }, [patientId, patients, navigate]); // Depend on patients object
-
+  }, [patientId, patients, navigate]);
  
-  // Loading state check
   if (patientId !== 0 && !patients[patientId]) {
-     // Show loading only if ID is valid but data isn't loaded yet
-     // The effect above handles redirection if data *cannot* be found
      return <div>Loading patient data...</div>;
   }
+
+  // Functions to handle the modal
+  const handleOpenModal = (field: CptField) => {
+    setCurrentEditingField(field);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCurrentEditingField(null);
+  };
+
+  const cptFields: CptField[] = ["TE", "TA", "MAN", "NMRE"];
+
+  const handleSwipe = (direction: 'left' | 'right') => {
+    if (!currentEditingField) return;
+    
+    const currentIndex = cptFields.indexOf(currentEditingField);
+    let nextIndex;
+
+    if (direction === 'right') {
+      nextIndex = (currentIndex + 1) % cptFields.length;
+    } else { // 'left'
+      nextIndex = (currentIndex - 1 + cptFields.length) % cptFields.length;
+    }
+    
+    setCurrentEditingField(cptFields[nextIndex]);
+  };
+  
+  const getValueForField = (field: CptField | null): string => {
+    if (!field) return "";
+    switch (field) {
+      case "TE": return te;
+      case "TA": return ta;
+      case "MAN": return man;
+      case "NMRE": return nmre;
+      default: return "";
+    }
+  };
+
+  const setValueForField = (field: CptField | null, value: string) => {
+    if (!field) return;
+    switch (field) {
+      case "TE": setTe(value); break;
+      case "TA": setTa(value); break;
+      case "MAN": setMan(value); break;
+      case "NMRE": setNmre(value); break;
+    }
+  };
+
+  // A small component to render the clickable input fields
+  const ModalInputTrigger = ({ label, value, onClick }: { label: string, value: string, onClick: () => void }) => (
+    <div onClick={onClick} className="cursor-pointer">
+      <label className="block text-sm font-medium text-foreground-500 mb-1">{label}</label>
+      <div className="w-full h-12 flex items-center px-3 bg-default-100 hover:bg-default-200 transition-colors rounded-lg">
+        <span className="text-lg">{value || '0'}</span>
+      </div>
+    </div>
+  );
 
 
   return (
@@ -310,53 +333,43 @@ const PatientDetailPage = () => {
               />
             </div>
 
-            {/* Number Inputs */}
-            <div className=" grid grid-cols-4 md:grid-cols-2 mt-4 gap-4">
-              <NumberInput
-                label="TE"
-                value={Number(te) || 0} // Ensure value is number
-                onChange={(value) => setTe(value.toString())} // onChange provides number
-                hideStepper={true}
-              />
-              <NumberInput
-                label="TA"
-                value={Number(ta) || 0}
-                onChange={(value) => setTa(value.toString())}
-                hideStepper={true}
-              />
-              <NumberInput
-                label="MAN"
-                value={Number(man) || 0}
-                onChange={(value) => setMan(value.toString())}
-                hideStepper={true}
-              />
-              <NumberInput
-                label="NMRE"
-                value={Number(nmre) || 0}
-                onChange={(value) => setNmre(value.toString())}
-                hideStepper={true}
-              />
+            {/* Replaced Number Inputs with Modal Triggers */}
+            <div className="grid grid-cols-4 md:grid-cols-2 mt-4 gap-4">
+               <ModalInputTrigger label="TE" value={te} onClick={() => handleOpenModal("TE")} />
+               <ModalInputTrigger label="TA" value={ta} onClick={() => handleOpenModal("TA")} />
+               <ModalInputTrigger label="MAN" value={man} onClick={() => handleOpenModal("MAN")} />
+               <ModalInputTrigger label="NMRE" value={nmre} onClick={() => handleOpenModal("NMRE")} />
             </div>
 
-            {/* Time Inputs - Fix the missing onChange handlers */}
+            {/* Time Inputs */}
             <div className="flex gap-4">
               <Input
-                
-                type = "text"
+                type="text"
                 label="Start Time"
                 value={startTime}
-                onValueChange={(time) => setStartTime(time)}
+                onValueChange={setStartTime}
               />
               <Input
                 type="text"
                 label="End Time"
                 value={endTime}
-                onValueChange={(time) => setEndTime(time)}
+                onValueChange={setEndTime}
               />
             </div>
           </div>
         </div>
       </section>
+
+      {/* Render the modal conditionally */}
+      {isModalOpen && (
+        <NumberPadModal
+          onClose={handleCloseModal}
+          label={currentEditingField || ""}
+          value={getValueForField(currentEditingField)}
+          onValueChange={(newValue) => setValueForField(currentEditingField, newValue)}
+          onSwipe={handleSwipe}
+        />
+      )}
     </DefaultLayout>
   );
 };

@@ -5,7 +5,7 @@
   "type": "module",
   "homepage": "https://drbrockman.github.io/heroCopy/",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "tsc && vite build",
     "lint": "eslint -c .eslintrc.json ./src/**/**/*.{ts,tsx} --fix",
     "preview": "vite preview",
@@ -30,6 +30,7 @@
     "@react-aria/visually-hidden": "3.8.21",
     "@react-types/shared": "3.28.0",
     "@supabase/supabase-js": "^2.49.4",
+    "@use-gesture/react": "^10.3.1",
     "clsx": "2.1.1",
     "framer-motion": "11.15.0",
     "react": "18.3.1",

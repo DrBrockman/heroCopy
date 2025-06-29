@@ -48,11 +48,7 @@ function Exercise({
   warmups,
   setWarmups,
 }: ExerciseProps) {
-  
-
   const [newExerciseId, setNewExerciseId] = React.useState<string | null>(null);
-
-  
 
   const addNewExercise = () => {
     const id = Math.random().toString(36).substring(7);
@@ -101,14 +97,6 @@ function Exercise({
   const deleteExercise = (id: string) => {
     const newExercises = exercises.filter((ex) => ex.id !== id);
     setExercises(newExercises);
-    // Remove direct context update - parent will handle saving
-    /*
-    if (patientId) {
-      updatePatient(patientId, {
-        exercisesData: newExercises
-      });
-    }
-    */
   };
 
   const deleteWarmup = (id: string) => {
@@ -117,10 +105,7 @@ function Exercise({
     // Remove direct context update - parent will handle saving
   };
 
-  const handleKeyPress = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    
-  ) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       // Potentially find the next input or just add new exercise
       addNewExercise();
@@ -142,32 +127,29 @@ function Exercise({
 
   return (
     <div className="w-full space-y-6">
-      <h2 className="text-xl font-semibold">Treatment</h2>
+      <h2 className="text-l font-semibold">Treatment</h2>
       <div className="flex flex-nowrap gap-2 justify-between ">
         {/* Conditionally render the Add Warm Up dropdown */}
-        {warmups.length === 0 && (
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                color="primary"
-                startContent={<Icon icon="lucide:plus" />}
-              >
-                Warm Up
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Select Warmup Type"
-              onAction={(key) => addNewWarmup(key as "Bike" | "NuStep")} // Call addNewWarmup with selected key
-            >
-              <DropdownItem key="Bike" textValue="Bike">
-                Bike
-              </DropdownItem>
-              <DropdownItem key="NuStep" textValue="NuStep">
-                NuStep
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        )}
+
+        <Dropdown>
+          <DropdownTrigger>
+            <Button color="primary" startContent={<Icon icon="lucide:plus" />}>
+              Warm Up
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label="Select Warmup Type"
+            onAction={(key) => addNewWarmup(key as "Bike" | "NuStep")} // Call addNewWarmup with selected key
+          >
+            <DropdownItem key="Bike" textValue="Bike">
+              Bike
+            </DropdownItem>
+            <DropdownItem key="NuStep" textValue="NuStep">
+              NuStep
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+
         <Button
           color="primary"
           onPress={addNewExercise}
@@ -175,7 +157,7 @@ function Exercise({
         >
           Exercise
         </Button>
-       
+
         <Button
           color="primary"
           onPress={addNewExercise}
@@ -183,170 +165,167 @@ function Exercise({
         >
           Stretches
         </Button>
-       
       </div>
 
       {warmups.length > 0 && (
         <Card className="w-full">
           <div className="pl-4 pt-2 font-semibold text-lg">Warm Up</div>
-          <div className="overflow-x-auto"> 
-          <Table removeWrapper aria-label="Warm up table" hideHeader>
-            <TableHeader>
-              <TableColumn>Name</TableColumn>
-              <TableColumn>Intensity</TableColumn>
-              <TableColumn>Duration</TableColumn>
-              <TableColumn>Actions</TableColumn>
-            </TableHeader>
-            <TableBody>
-              {warmups.map((wm) => (
-                <TableRow key={wm.id}>
-                  <TableCell>
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button variant="bordered" className="w-32">
-                          {wm.name || "Choose"}
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu
-                        aria-label="Warmup Name"
-                        onAction={(key) => updateWarmup(wm.id, "name", key)}
-                      >
-                        <DropdownItem key="Bike" textValue="Bike">
-                          Bike
-                        </DropdownItem>
-                        <DropdownItem key="NuStep" textValue="NuStep">
-                          NuStep
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </TableCell>
-                  <TableCell>
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button variant="bordered" className="w-32">
-                          {wm.intensity || "Choose"}
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu
-                        aria-label="Warmup Intensity"
-                        onAction={(key) =>
-                          updateWarmup(wm.id, "intensity", key)
+          <div className="overflow-x-auto">
+            <Table removeWrapper aria-label="Warm up table" hideHeader>
+              <TableHeader>
+                <TableColumn>Name</TableColumn>
+                <TableColumn>Intensity</TableColumn>
+                <TableColumn>Duration</TableColumn>
+                <TableColumn>Actions</TableColumn>
+              </TableHeader>
+              <TableBody>
+                {warmups.map((wm) => (
+                  <TableRow key={wm.id}>
+                    <TableCell>
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <Button variant="bordered" className="w-32">
+                            {wm.name || "Choose"}
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu
+                          aria-label="Warmup Name"
+                          onAction={(key) => updateWarmup(wm.id, "name", key)}
+                        >
+                          <DropdownItem key="Bike" textValue="Bike">
+                            Bike
+                          </DropdownItem>
+                          <DropdownItem key="NuStep" textValue="NuStep">
+                            NuStep
+                          </DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                    </TableCell>
+                    <TableCell>
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <Button variant="bordered" className="w-32">
+                            {wm.intensity || "Choose"}
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu
+                          aria-label="Warmup Intensity"
+                          onAction={(key) =>
+                            updateWarmup(wm.id, "intensity", key)
+                          }
+                        >
+                          <DropdownItem key="Time" textValue="Time">
+                            Time
+                          </DropdownItem>
+                          <DropdownItem key="Distance" textValue="Distance">
+                            Distance
+                          </DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                    </TableCell>
+                    <TableCell>
+                      <input
+                        type="text"
+                        value={wm.duration}
+                        onChange={(e) =>
+                          updateWarmup(wm.id, "duration", e.target.value)
                         }
+                        className="w-32 p-2 rounded-lg border border-default-200 bg-transparent"
+                        placeholder="Enter duration"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        isIconOnly
+                        color="danger"
+                        variant="light"
+                        onPress={() => deleteWarmup(wm.id)}
                       >
-                        <DropdownItem key="Time" textValue="Time">
-                          Time
-                        </DropdownItem>
-                        <DropdownItem key="Distance" textValue="Distance">
-                          Distance
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      type="text"
-                      value={wm.duration}
-                      onChange={(e) =>
-                        updateWarmup(wm.id, "duration", e.target.value)
-                      }
-                      className="w-32 p-2 rounded-lg border border-default-200 bg-transparent"
-                      placeholder="Enter duration"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      isIconOnly
-                      color="danger"
-                      variant="light"
-                      onPress={() => deleteWarmup(wm.id)}
-                    >
-                      <Icon icon="lucide:trash-2" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                        <Icon icon="lucide:trash-2" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </Card>
       )}
 
-{exercises.map((exercise) => (
-  <Card key={exercise.id} className="p-4 space-y-4">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <Input
-        type="text"
-        size="sm"
-        variant="flat"
-        value={exercise.name}
-        onChange={(e) =>
-          updateExercise(exercise.id, "name", e.target.value)
-        }
-        onKeyPress={handleKeyPress}
-        className="w-full sm:w-1/3"
-        placeholder="Exercise name"
-        data-id={exercise.id}
-      />
+      {exercises.map((exercise) => (
+        <Card key={exercise.id} className="p-4 space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <Input
+              type="text"
+              size="sm"
+              variant="flat"
+              value={exercise.name}
+              onChange={(e) =>
+                updateExercise(exercise.id, "name", e.target.value)
+              }
+              onKeyPress={handleKeyPress}
+              className="w-full sm:w-1/3"
+              placeholder="Exercise name"
+              data-id={exercise.id}
+            />
 
-      <div className="flex gap-2 w-full sm:w-2/3">
-        {/* Sets */}
-        <Dropdown>
-          <DropdownTrigger>
-            <Button variant="flat" className="w-full" color="primary">
-              Sets: {exercise.sets}
-            </Button>
-          </DropdownTrigger>
-          <DropdownMenu
-            aria-label="Set Options"
-            onAction={(key) =>
-              updateExercise(exercise.id, "sets", key.toString())
-            }
-          >
-            {[1, 2, 3, 4, 5].map((option) => (
-              <DropdownItem key={option.toString()}>
-                {option}
-              </DropdownItem>
-            ))}
-          </DropdownMenu>
-        </Dropdown>
+            <div className="flex gap-2 w-full sm:w-2/3">
+              {/* Sets */}
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button variant="flat" className="w-full" color="primary">
+                    Sets: {exercise.sets}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Set Options"
+                  onAction={(key) =>
+                    updateExercise(exercise.id, "sets", key.toString())
+                  }
+                >
+                  {[1, 2, 3, 4, 5].map((option) => (
+                    <DropdownItem key={option.toString()}>
+                      {option}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
 
-        {/* Reps */}
-        <Dropdown>
-          <DropdownTrigger>
-            <Button variant="flat" className="w-full" color="primary">
-              Reps: {exercise.reps}
-            </Button>
-          </DropdownTrigger>
-          <DropdownMenu
-            aria-label="Rep Options"
-            onAction={(key) =>
-              updateExercise(exercise.id, "reps", key.toString())
-            }
-          >
-            {[1, 3, 5, 6, 8, 10, 12, 15, 20].map((option) => (
-              <DropdownItem key={option.toString()}>
-                {option}
-              </DropdownItem>
-            ))}
-          </DropdownMenu>
-        </Dropdown>
+              {/* Reps */}
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button variant="flat" className="w-full" color="primary">
+                    Reps: {exercise.reps}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Rep Options"
+                  onAction={(key) =>
+                    updateExercise(exercise.id, "reps", key.toString())
+                  }
+                >
+                  {[1, 3, 5, 6, 8, 10, 12, 15, 20].map((option) => (
+                    <DropdownItem key={option.toString()}>
+                      {option}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
 
-        
-
-        {/* Delete Button */}
-        <Button
-          isIconOnly
-          color="danger"
-          variant="light"
-          onPress={() => deleteExercise(exercise.id)}
-          className="shrink-0"
-        >
-          <Icon icon="lucide:trash-2" />
-        </Button>
-      </div>
-    </div>
-  </Card>
-))}
+              {/* Delete Button */}
+              <Button
+                isIconOnly
+                color="danger"
+                variant="light"
+                onPress={() => deleteExercise(exercise.id)}
+                className="shrink-0"
+              >
+                <Icon icon="lucide:trash-2" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
