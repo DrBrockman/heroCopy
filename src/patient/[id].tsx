@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import DefaultLayout from "@/layouts/default";
 import { Input } from "@heroui/react";
 import { Button, Textarea } from "@heroui/react";
 import { title } from "@/components/primitives";
-import ManFun from '@/components/ManFun';
-import ExerciseComponent from '@/components/exercises';
+import ManFun from "@/components/ManFun";
+import ExerciseComponent from "@/components/exercises";
 import { usePatient, Patient } from "@/PatientContext";
-import {addToast} from "@heroui/react"
+import { addToast } from "@heroui/react";
 import { supabase } from "../supabaseClient";
-import { NumberPadModal } from '@/components/NumberpadModal';
+import { NumberPadModal } from "@/components/NumberpadModal";
+import type { Treatment } from "@/types/treatment";
 
 // Ensure these match the types expected by the child components and context
 interface ExerciseData {
@@ -43,21 +44,22 @@ const PatientDetailPage = () => {
   const [subjective, setSubjective] = useState("");
   const [assessment, setAssessment] = useState("");
   const [plan, setPlan] = useState("");
-  const [startTime, setStartTime] = useState<string>(""); 
-  const [endTime, setEndTime] = useState<string>("");   
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
   const [te, setTe] = useState("");
   const [ta, setTa] = useState("");
   const [man, setMan] = useState("");
   const [nmre, setNmre] = useState("");
-
+  const [manual, setManual] = useState<Treatment[]>([]);
   // State for managing the number pad modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentEditingField, setCurrentEditingField] = useState<CptField | null>(null);
+  const [currentEditingField, setCurrentEditingField] =
+    useState<CptField | null>(null);
 
   // Effect for loading data from localStorage first, then from context
   useEffect(() => {
     let isMounted = true;
-    
+
     // If not in localStorage or loading failed, try from context
     const loadFromContext = () => {
       const patientData = patients[patientId];
@@ -74,6 +76,7 @@ const PatientDetailPage = () => {
         setExercises(patientData.exercisesData || []);
         setWarmups(patientData.warmupsData || []);
         setSelectedCategories(patientData.selectedCategories || []);
+        setManual(patientData.manual || []);
         console.log("Loaded patient data from context");
       }
     };
@@ -85,24 +88,44 @@ const PatientDetailPage = () => {
     };
   }, [patientId, patients]);
 
- 
   // Effect for saving data to context (remains similar)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (patientId && patients[patientId]) {
         const currentData = patients[patientId];
         const newData: Partial<Patient> = {
-          subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
-          exercisesData: exercises, warmupsData: warmups, selectedCategories
-          
+          subjective,
+          assessment,
+          plan,
+          startTime,
+          endTime,
+          te,
+          ta,
+          man,
+          nmre,
+          exercisesData: exercises,
+          warmupsData: warmups,
+          selectedCategories,
+          manual,
         };
 
-        const hasChanged = JSON.stringify(newData) !== JSON.stringify({
-            subjective: currentData.subjective || "", assessment: currentData.assessment || "", plan: currentData.plan || "",
-            startTime: currentData.startTime || "", endTime: currentData.endTime || "", te: currentData.te || "", ta: currentData.ta || "",
-            man: currentData.man || "", nmre: currentData.nmre || "", 
-            exercisesData: currentData.exercisesData || [], warmupsData: currentData.warmupsData || [], selectedCategories: currentData.selectedCategories || []
-        });
+        const hasChanged =
+          JSON.stringify(newData) !==
+          JSON.stringify({
+            subjective: currentData.subjective || "",
+            assessment: currentData.assessment || "",
+            plan: currentData.plan || "",
+            startTime: currentData.startTime || "",
+            endTime: currentData.endTime || "",
+            te: currentData.te || "",
+            ta: currentData.ta || "",
+            man: currentData.man || "",
+            nmre: currentData.nmre || "",
+            exercisesData: currentData.exercisesData || [],
+            warmupsData: currentData.warmupsData || [],
+            selectedCategories: currentData.selectedCategories || [],
+            manual: currentData.manual || [],
+          });
 
         if (hasChanged) {
           updatePatient(patientId, newData);
@@ -110,16 +133,32 @@ const PatientDetailPage = () => {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, 
-      exercises, warmups, selectedCategories, patientId, updatePatient, patients]);
-      
+  }, [
+    subjective,
+    assessment,
+    plan,
+    startTime,
+    endTime,
+    te,
+    ta,
+    man,
+    nmre,
+    exercises,
+    warmups,
+    selectedCategories,
+    patientId,
+    manual,
+    updatePatient,
+    patients,
+  ]);
+
   // Function to save data to Supabase
   const saveToSupabase = async (patientData: Patient) => {
     try {
       const { visitId, ...dataToSave } = patientData;
-      
+
       const { data, error } = await supabase
-        .from('people')
+        .from("people")
         .update({
           subjective: dataToSave.subjective,
           assessment: dataToSave.assessment,
@@ -133,13 +172,20 @@ const PatientDetailPage = () => {
           exercisesData: dataToSave.exercisesData,
           warmupsData: dataToSave.warmupsData,
           selectedCategories: dataToSave.selectedCategories,
+          manual: dataToSave.manual,
         })
-        .eq('visitId', visitId)
+        .eq("visitId", visitId)
         .select();
 
       if (error) throw error;
 
-      addToast({ title: "Patient data saved successfully.", variant: "flat", timeout: 3000, severity: "success", color: "primary" });
+      addToast({
+        title: "Patient data saved successfully.",
+        variant: "flat",
+        timeout: 3000,
+        severity: "success",
+        color: "primary",
+      });
       console.log("Successfully saved to Supabase:", data);
       return data;
     } catch (error) {
@@ -155,8 +201,19 @@ const PatientDetailPage = () => {
         const currentPatientData = patients[patientId];
         const dataToSend: Patient = {
           ...currentPatientData,
-          subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
-          exercisesData: exercises, warmupsData: warmups, selectedCategories
+          subjective,
+          assessment,
+          plan,
+          startTime,
+          endTime,
+          te,
+          ta,
+          man,
+          nmre,
+          exercisesData: exercises,
+          warmupsData: warmups,
+          selectedCategories,
+          manual,
         };
         await saveToSupabase(dataToSend);
         await fetchPatients();
@@ -165,23 +222,38 @@ const PatientDetailPage = () => {
         console.error("Error saving patient data:", error);
       }
     } else {
-      console.warn("No patient data found for ID:", patientId, "Cannot save data.");
+      console.warn(
+        "No patient data found for ID:",
+        patientId,
+        "Cannot save data."
+      );
     }
-    navigate('/blog');
+    navigate("/blog");
   };
 
   // New useEffect to save data when the tab becomes hidden
   useEffect(() => {
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'hidden') {
+      if (document.visibilityState === "hidden") {
         console.log("Tab is hidden, attempting to save patient data...");
         if (patientId && patients[patientId]) {
           try {
             const currentPatientData = patients[patientId];
             const dataToSend: Patient = {
-              ...currentPatientData, 
-              subjective, assessment, plan, startTime, endTime, te, ta, man, nmre,
-              exercisesData: exercises, warmupsData: warmups, selectedCategories
+              ...currentPatientData,
+              subjective,
+              assessment,
+              plan,
+              startTime,
+              endTime,
+              te,
+              ta,
+              man,
+              nmre,
+              exercisesData: exercises,
+              warmupsData: warmups,
+              selectedCategories,
+              manual,
             };
             await saveToSupabase(dataToSend);
             console.log("Patient data saved successfully on tab hidden.");
@@ -189,27 +261,52 @@ const PatientDetailPage = () => {
             console.error("Error saving patient data on tab hidden:", error);
           }
         } else {
-          console.warn("No patient data found for ID:", patientId, "Cannot save data on tab hidden.");
+          console.warn(
+            "No patient data found for ID:",
+            patientId,
+            "Cannot save data on tab hidden."
+          );
         }
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [patientId, patients, subjective, assessment, plan, startTime, endTime, te, ta, man, nmre, exercises, warmups, selectedCategories, saveToSupabase]);
- 
+  }, [
+    patientId,
+    patients,
+    subjective,
+    assessment,
+    plan,
+    startTime,
+    endTime,
+    te,
+    ta,
+    man,
+    nmre,
+    exercises,
+    warmups,
+    selectedCategories,
+    manual,
+    saveToSupabase,
+  ]);
+
   useEffect(() => {
-    if (patientId !== 0 && Object.keys(patients).length > 0 && !patients[patientId]) {
-       console.warn(`Patient data not found for ID: ${patientId}. Redirecting.`);
-       navigate('/blog');
+    if (
+      patientId !== 0 &&
+      Object.keys(patients).length > 0 &&
+      !patients[patientId]
+    ) {
+      console.warn(`Patient data not found for ID: ${patientId}. Redirecting.`);
+      navigate("/blog");
     }
   }, [patientId, patients, navigate]);
- 
+
   if (patientId !== 0 && !patients[patientId]) {
-     return <div>Loading patient data...</div>;
+    return <div>Loading patient data...</div>;
   }
 
   // Functions to handle the modal
@@ -225,52 +322,75 @@ const PatientDetailPage = () => {
 
   const cptFields: CptField[] = ["TE", "TA", "MAN", "NMRE"];
 
-  const handleSwipe = (direction: 'left' | 'right') => {
+  const handleSwipe = (direction: "left" | "right") => {
     if (!currentEditingField) return;
-    
+
     const currentIndex = cptFields.indexOf(currentEditingField);
     let nextIndex;
 
-    if (direction === 'right') {
+    if (direction === "right") {
       nextIndex = (currentIndex + 1) % cptFields.length;
-    } else { // 'left'
+    } else {
+      // 'left'
       nextIndex = (currentIndex - 1 + cptFields.length) % cptFields.length;
     }
-    
+
     setCurrentEditingField(cptFields[nextIndex]);
   };
-  
+
   const getValueForField = (field: CptField | null): string => {
     if (!field) return "";
     switch (field) {
-      case "TE": return te;
-      case "TA": return ta;
-      case "MAN": return man;
-      case "NMRE": return nmre;
-      default: return "";
+      case "TE":
+        return te;
+      case "TA":
+        return ta;
+      case "MAN":
+        return man;
+      case "NMRE":
+        return nmre;
+      default:
+        return "";
     }
   };
 
   const setValueForField = (field: CptField | null, value: string) => {
     if (!field) return;
     switch (field) {
-      case "TE": setTe(value); break;
-      case "TA": setTa(value); break;
-      case "MAN": setMan(value); break;
-      case "NMRE": setNmre(value); break;
+      case "TE":
+        setTe(value);
+        break;
+      case "TA":
+        setTa(value);
+        break;
+      case "MAN":
+        setMan(value);
+        break;
+      case "NMRE":
+        setNmre(value);
+        break;
     }
   };
 
   // A small component to render the clickable input fields
-  const ModalInputTrigger = ({ label, value, onClick }: { label: string, value: string, onClick: () => void }) => (
+  const ModalInputTrigger = ({
+    label,
+    value,
+    onClick,
+  }: {
+    label: string;
+    value: string;
+    onClick: () => void;
+  }) => (
     <div onClick={onClick} className="cursor-pointer">
-      <label className="block text-sm font-medium text-foreground-500 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-foreground-500 mb-1">
+        {label}
+      </label>
       <div className="w-full h-12 flex items-center px-3 bg-default-100 hover:bg-default-200 transition-colors rounded-lg">
-        <span className="text-lg">{value || '0'}</span>
+        <span className="text-lg">{value || "0"}</span>
       </div>
     </div>
   );
-
 
   return (
     <DefaultLayout>
@@ -278,10 +398,14 @@ const PatientDetailPage = () => {
         <div className="px-5 w-full">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className={title({ size: 'sm' })}>{patients[patientId]?.first} {patients[patientId]?.last}</h1>
-              <p className="text-default-500">{patients[patientId]?.visitDateTime}</p>
+              <h1 className={title({ size: "sm" })}>
+                {patients[patientId]?.first} {patients[patientId]?.last}
+              </h1>
+              <p className="text-default-500">
+                {patients[patientId]?.visitDateTime}
+              </p>
             </div>
-            <Button onPress={handleBackPress} variant="flat" size='md'>
+            <Button onPress={handleBackPress} variant="flat" size="md">
               Back
             </Button>
           </div>
@@ -289,12 +413,14 @@ const PatientDetailPage = () => {
           <div className="space-y-6">
             {/* Subjective Textarea */}
             <div>
-              <label className="block text-sm font-medium mb-1">Subjective</label>
+              <label className="block text-sm font-medium mb-1">
+                Subjective
+              </label>
               <Textarea
                 className="w-full"
                 value={subjective}
                 onChange={(e) => setSubjective(e.target.value)}
-                variant='flat'
+                variant="flat"
                 minRows={2}
               />
             </div>
@@ -307,19 +433,23 @@ const PatientDetailPage = () => {
               setWarmups={setWarmups}
             />
             <ManFun
+              manual={manual}
+              setManual={setManual}
               selectedCategories={selectedCategories}
               setSelectedCategories={setSelectedCategories}
             />
 
             {/* Assessment and Plan Textareas */}
             <div>
-              <label className="block text-sm font-medium mb-1">Assessment</label>
+              <label className="block text-sm font-medium mb-1">
+                Assessment
+              </label>
               <Textarea
                 minRows={4}
                 className="w-full"
                 value={assessment}
                 onChange={(e) => setAssessment(e.target.value)}
-                variant='flat'
+                variant="flat"
               />
             </div>
             <div>
@@ -328,17 +458,33 @@ const PatientDetailPage = () => {
                 className="w-full"
                 value={plan}
                 onChange={(e) => setPlan(e.target.value)}
-                variant='flat'
+                variant="flat"
                 minRows={2}
               />
             </div>
 
             {/* Replaced Number Inputs with Modal Triggers */}
             <div className="grid grid-cols-4 md:grid-cols-2 mt-4 gap-4">
-               <ModalInputTrigger label="TE" value={te} onClick={() => handleOpenModal("TE")} />
-               <ModalInputTrigger label="TA" value={ta} onClick={() => handleOpenModal("TA")} />
-               <ModalInputTrigger label="MAN" value={man} onClick={() => handleOpenModal("MAN")} />
-               <ModalInputTrigger label="NMRE" value={nmre} onClick={() => handleOpenModal("NMRE")} />
+              <ModalInputTrigger
+                label="TE"
+                value={te}
+                onClick={() => handleOpenModal("TE")}
+              />
+              <ModalInputTrigger
+                label="TA"
+                value={ta}
+                onClick={() => handleOpenModal("TA")}
+              />
+              <ModalInputTrigger
+                label="MAN"
+                value={man}
+                onClick={() => handleOpenModal("MAN")}
+              />
+              <ModalInputTrigger
+                label="NMRE"
+                value={nmre}
+                onClick={() => handleOpenModal("NMRE")}
+              />
             </div>
 
             {/* Time Inputs */}
@@ -366,7 +512,9 @@ const PatientDetailPage = () => {
           onClose={handleCloseModal}
           label={currentEditingField || ""}
           value={getValueForField(currentEditingField)}
-          onValueChange={(newValue) => setValueForField(currentEditingField, newValue)}
+          onValueChange={(newValue) =>
+            setValueForField(currentEditingField, newValue)
+          }
           onSwipe={handleSwipe}
         />
       )}

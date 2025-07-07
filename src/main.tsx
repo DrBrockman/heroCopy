@@ -10,9 +10,11 @@ import "@/styles/globals.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <HashRouter>
-      <Provider> {/* Wrap App with Provider */}
+      <Provider>
+        {" "}
+        {/* Wrap App with Provider */}
         <App />
       </Provider>
     </HashRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

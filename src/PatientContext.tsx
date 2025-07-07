@@ -2,14 +2,14 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { addToast } from "@heroui/react";
 import { fetchSpreadsheetData } from "@/components/fetchData"; // Import the Supabase fetch function
-
+import type { Treatment } from "@/types/treatment";
 export interface Patient {
   id: number;
   visitId: string;
   visitDateTime: string;
   first: string;
   last: string;
-  
+
   subjective: string;
   assessment: string;
   plan: string;
@@ -33,7 +33,8 @@ export interface Patient {
   ta?: string;
   man?: string;
   nmre?: string;
-  selectedCategories?: string[]; 
+  selectedCategories?: string[];
+  manual?: Treatment[];
 }
 
 interface Exercise {
@@ -50,7 +51,11 @@ interface PatientContextType {
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
-export const PatientProvider = ({ children }: { children: React.ReactNode }) => {
+export const PatientProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [patients, setPatients] = useState<Record<number, Patient>>({});
   const location = useLocation();
 
@@ -63,38 +68,40 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
       // Check if data is an array (Supabase returns an array or null)
       if (data && Array.isArray(data)) {
         // Create new patient map directly from fetched data
-        const patientMap = data.reduce((acc: Record<number, Patient>, patient: any) => {
-          
-          acc[patient.id] = { 
-            id: patient.id,
-            visitId: patient.visitId,
-            first: patient.first,
-            last: patient.last,
-            visitDateTime: patient.visitDateTime,
-            subjective: patient.subjective || "", // Ensure defaults if needed
-            assessment: patient.assessment || "",
-            plan: patient.plan || "",
-            exercises: [], // Initialize if needed
-            exercisesData: patient.exercisesData || [],
-            warmupsData: patient.warmupsData || [],
-            selectedCategories: patient.selectedCategories || [],
-            
-            startTime: patient.startTime,
-            endTime: patient.endTime,
-            te: patient.te,
-            ta: patient.ta,
-            man: patient.man,
-            nmre: patient.nmre,
-          };
-          return acc;
-        }, {} as Record<number, Patient>);
+        const patientMap = data.reduce(
+          (acc: Record<number, Patient>, patient: any) => {
+            acc[patient.id] = {
+              id: patient.id,
+              visitId: patient.visitId,
+              first: patient.first,
+              last: patient.last,
+              visitDateTime: patient.visitDateTime,
+              subjective: patient.subjective || "", // Ensure defaults if needed
+              assessment: patient.assessment || "",
+              plan: patient.plan || "",
+              exercises: [], // Initialize if needed
+              exercisesData: patient.exercisesData || [],
+              warmupsData: patient.warmupsData || [],
+              selectedCategories: patient.selectedCategories || [],
+              manual: patient.manual || [], // Ensure defaults if needed
+              startTime: patient.startTime,
+              endTime: patient.endTime,
+              te: patient.te,
+              ta: patient.ta,
+              man: patient.man,
+              nmre: patient.nmre,
+            };
+            return acc;
+          },
+          {} as Record<number, Patient>
+        );
 
         // Directly set the state with fetched data
         setPatients(patientMap);
       } else if (data === null) {
-         // Handle case where Supabase returns null (e.g., no data)
-         console.log("No patient data found in Supabase.");
-         setPatients({}); // Clear state if no data
+        // Handle case where Supabase returns null (e.g., no data)
+        console.log("No patient data found in Supabase.");
+        setPatients({}); // Clear state if no data
       }
     } catch (error) {
       console.error("Error fetching patients:", error);
@@ -110,25 +117,24 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
     };
 
     loadPatients();
-  
   }, [location.pathname]); // Keep dependency on location.pathname
   useEffect(() => {
     // Function to handle visibility change
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         console.log("Page is now visible, refreshing patient data...");
         fetchPatients();
       }
     };
 
     // Add event listener for visibility change
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Clean up the event listener when component unmounts
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [fetchPatients]);
   // Update a patient's details in state only
   const updatePatient = (id: number, data: Partial<Patient>) => {
     setPatients((prev) => {
@@ -137,19 +143,19 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
       const updatedPatient = {
         ...prev[id],
         ...data,
-        
+
         exercisesData: data.exercisesData || prev[id].exercisesData || [],
         warmupsData: data.warmupsData || prev[id].warmupsData || [],
-        selectedCategories: data.selectedCategories || prev[id].selectedCategories || [],
-        
+        selectedCategories:
+          data.selectedCategories || prev[id].selectedCategories || [],
+        manual: data.manual || prev[id].manual || [],
       };
 
       const updatedPatients = {
         ...prev,
-        [id]: updatedPatient
+        [id]: updatedPatient,
       };
 
-     
       return updatedPatients;
     });
   };
